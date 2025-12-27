@@ -1,0 +1,538 @@
+{
+  "name": "Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "54cf3f32-37e4-4853-9fb8-5e8742a5d8c3",
+              "name": "page",
+              "value": 0,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -448,
+        384
+      ],
+      "id": "a9b84247-282d-4f4d-a67f-00d76f82c285",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "url": "http://212.237.219.35:8080/students/5/cms/spares",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page",
+              "value": "={{$json.page}}"
+            },
+            {
+              "name": "size",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -176,
+        384
+      ],
+      "id": "cd257e00-0b39-4efb-b8cb-74e0fc583432",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5a6a630d-722e-486c-92ba-2372a75ece5b",
+              "name": "page",
+              "value": "={{ $('Edit Fields5').item.json.page+=1 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        528
+      ],
+      "id": "cbbc0ea4-beb3-413e-a5d3-a806df8fc2a5",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "5O1XegQzxmV3QwnY",
+          "mode": "list",
+          "cachedResultName": "database",
+          "cachedResultUrl": "/projects/o0kPamcanTNQ86mO/datatables/5O1XegQzxmV3QwnY"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "=spareCode",
+              "keyValue": "={{ $json.spareCode }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "quantity": "={{ $json.quantity }}",
+            "spareCode": "={{ $json.spareCode }}",
+            "spareName": "={{ $json.spareName }}",
+            "spareDescription": "={{ $json.spareDescription }}",
+            "spareType": "={{ $json.spareType }}",
+            "spareStatus": "={{ $json.spareStatus }}",
+            "price": "={{ $json.price }}",
+            "date": "={{ $json.updatedAt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "spareCode",
+              "displayName": "spareCode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "spareName",
+              "displayName": "spareName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "spareDescription",
+              "displayName": "spareDescription",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "spareType",
+              "displayName": "spareType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "spareStatus",
+              "displayName": "spareStatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "quantity",
+              "displayName": "quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        48,
+        384
+      ],
+      "id": "2b46c546-d787-4b4f-84d5-8fbc3475141d",
+      "name": "Upsert row(s)2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "71751936-fb0b-44ee-b047-6ba3d3c2d4b6",
+              "leftValue": "={{ $('HTTP Request4').all().length }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        384
+      ],
+      "id": "3ad53107-3717-4586-ada0-8bdabe08bd22",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "5O1XegQzxmV3QwnY",
+          "mode": "list",
+          "cachedResultName": "database",
+          "cachedResultUrl": "/projects/o0kPamcanTNQ86mO/datatables/5O1XegQzxmV3QwnY"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        544,
+        288
+      ],
+      "id": "1bad6a0c-abed-4333-a348-1f504e616792",
+      "name": "Get row(s)2",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://212.237.219.35:8080/students/5/report/csv",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/csv",
+        "body": "={{ $json.combined_text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1936,
+        208
+      ],
+      "id": "32f6f287-16ea-457d-8d9c-3dab1432fdaf",
+      "name": "HTTP Request5",
+      "executeOnce": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "rows",
+        "options": {
+          "includeBinaries": false
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        208
+      ],
+      "id": "adbbbb0f-cfcf-4448-bbda-9bad138115ad",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "78991259-5400-453f-be71-b5203972ab66",
+              "name": "csv_row",
+              "value": "={{ $json.spareCode }};{{ $json.spareName }};{{ $json.spareDescription }};{{ $json.spareType }};{{ $json.spareStatus }};{{ $json.price }};{{ $json.quantity }};{{ $json.date }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        208
+      ],
+      "id": "1dc5ea9b-87e4-4d6b-9c0a-f64666c295db",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Используем $input.all(), чтобы получить все элементы из Aggregate\nconst items = $input.all();\n\n// Извлекаем массив строк из первого (и единственного) объекта, который выдает Aggregate\nconst rows = items[0].json.rows.map(item => item.csv_row);\n\n// Соединяем их в одну строку с реальными переносами\nreturn {\n  combined_text: rows.join('\\n')\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        208
+      ],
+      "id": "b66865ef-28db-40cb-9863-664b15fd0fbe",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    \"spareCode\": \"SPARE-1\",\n    \"spareName\": \"Spare Part 1\",\n    \"spareDescription\": \"Description for spare part 1\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"43\",\n    \"quantity\": 2,\n    \"date\": \"2025-10-25T11:26:09.510802372\"\n  },\n  {\n    \"spareCode\": \"SPARE-2\",\n    \"spareName\": \"Spare Part 2\",\n    \"spareDescription\": \"Description for spare part 2\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"28\",\n    \"quantity\": 3,\n    \"date\": \"2025-10-25T11:26:09.511635058\"\n  },\n  {\n    \"spareCode\": \"SPARE-3\",\n    \"spareName\": \"Spare Part 3\",\n    \"spareDescription\": \"Description for spare part 3\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"0\",\n    \"quantity\": 24,\n    \"date\": \"2025-10-25T11:26:09.511673246\"\n  },\n  {\n    \"spareCode\": \"SPARE-4\",\n    \"spareName\": \"Spare Part 4\",\n    \"spareDescription\": \"Description for spare part 4\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"20\",\n    \"quantity\": 41,\n    \"date\": \"2025-10-25T11:26:09.511690462\"\n  },\n  {\n    \"spareCode\": \"SPARE-5\",\n    \"spareName\": \"Spare Part 5\",\n    \"spareDescription\": \"Description for spare part 5\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"3\",\n    \"quantity\": 45,\n    \"date\": \"2025-10-25T11:26:09.511705592\"\n  },\n  {\n    \"spareCode\": \"SPARE-6\",\n    \"spareName\": \"Spare Part 6\",\n    \"spareDescription\": \"Description for spare part 6\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"31\",\n    \"quantity\": 28,\n    \"date\": \"2025-10-25T11:26:09.511738413\"\n  },\n  {\n    \"spareCode\": \"SPARE-7\",\n    \"spareName\": \"Spare Part 7\",\n    \"spareDescription\": \"Description for spare part 7\",\n    \"spareType\": \"GEARBOX\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"32\",\n    \"quantity\": 31,\n    \"date\": \"2025-10-25T11:26:09.511753247\"\n  },\n  {\n    \"spareCode\": \"SPARE-8\",\n    \"spareName\": \"Spare Part 8\",\n    \"spareDescription\": \"Description for spare part 8\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"20\",\n    \"quantity\": 29,\n    \"date\": \"2025-10-25T11:26:09.511766273\"\n  },\n  {\n    \"spareCode\": \"SPARE-9\",\n    \"spareName\": \"Spare Part 9\",\n    \"spareDescription\": \"Description for spare part 9\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"48\",\n    \"quantity\": 36,\n    \"date\": \"2025-10-25T11:26:09.511791327\"\n  },\n  {\n    \"spareCode\": \"SPARE-10\",\n    \"spareName\": \"Spare Part 10\",\n    \"spareDescription\": \"Description for spare part 10\",\n    \"spareType\": \"GEARBOX\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"25\",\n    \"quantity\": 30,\n    \"date\": \"2025-10-25T11:26:09.511824893\"\n  },\n  {\n    \"spareCode\": \"SPARE-11\",\n    \"spareName\": \"Spare Part 11\",\n    \"spareDescription\": \"Description for spare part 11\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"33\",\n    \"quantity\": 5,\n    \"date\": \"2025-10-25T11:26:09.511838730\"\n  },\n  {\n    \"spareCode\": \"SPARE-12\",\n    \"spareName\": \"Spare Part 12\",\n    \"spareDescription\": \"Description for spare part 12\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"0\",\n    \"quantity\": 2,\n    \"date\": \"2025-10-25T11:26:09.511890331\"\n  },\n  {\n    \"spareCode\": \"SPARE-13\",\n    \"spareName\": \"Spare Part 13\",\n    \"spareDescription\": \"Description for spare part 13\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"13\",\n    \"quantity\": 49,\n    \"date\": \"2025-10-25T11:26:09.511907368\"\n  },\n  {\n    \"spareCode\": \"SPARE-14\",\n    \"spareName\": \"Spare Part 14\",\n    \"spareDescription\": \"Description for spare part 14\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"49\",\n    \"quantity\": 7,\n    \"date\": \"2025-10-25T11:26:09.511926638\"\n  },\n  {\n    \"spareCode\": \"SPARE-15\",\n    \"spareName\": \"Spare Part 15\",\n    \"spareDescription\": \"Description for spare part 15\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"30\",\n    \"quantity\": 45,\n    \"date\": \"2025-10-25T11:26:09.511959222\"\n  },\n  {\n    \"spareCode\": \"SPARE-16\",\n    \"spareName\": \"Spare Part 16\",\n    \"spareDescription\": \"Description for spare part 16\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"28\",\n    \"quantity\": 7,\n    \"date\": \"2025-10-25T11:26:09.511979541\"\n  },\n  {\n    \"spareCode\": \"SPARE-17\",\n    \"spareName\": \"Spare Part 17\",\n    \"spareDescription\": \"Description for spare part 17\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"43\",\n    \"quantity\": 42,\n    \"date\": \"2025-10-25T11:26:09.511993793\"\n  },\n  {\n    \"spareCode\": \"SPARE-18\",\n    \"spareName\": \"Spare Part 18\",\n    \"spareDescription\": \"Description for spare part 18\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"45\",\n    \"quantity\": 5,\n    \"date\": \"2025-10-25T11:26:09.512026652\"\n  },\n  {\n    \"spareCode\": \"SPARE-19\",\n    \"spareName\": \"Spare Part 19\",\n    \"spareDescription\": \"Description for spare part 19\",\n    \"spareType\": \"GEARBOX\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"18\",\n    \"quantity\": 13,\n    \"date\": \"2025-10-25T11:26:09.512042471\"\n  },\n  {\n    \"spareCode\": \"SPARE-20\",\n    \"spareName\": \"Spare Part 20\",\n    \"spareDescription\": \"Description for spare part 20\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"15\",\n    \"quantity\": 26,\n    \"date\": \"2025-10-25T11:26:09.512082394\"\n  },\n  {\n    \"spareCode\": \"SPARE-21\",\n    \"spareName\": \"Spare Part 21\",\n    \"spareDescription\": \"Description for spare part 21\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"12\",\n    \"quantity\": 19,\n    \"date\": \"2025-10-25T11:26:09.512094896\"\n  },\n  {\n    \"spareCode\": \"SPARE-22\",\n    \"spareName\": \"Spare Part 22\",\n    \"spareDescription\": \"Description for spare part 22\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"2\",\n    \"quantity\": 43,\n    \"date\": \"2025-10-25T11:26:09.512129596\"\n  },\n  {\n    \"spareCode\": \"SPARE-23\",\n    \"spareName\": \"Spare Part 23\",\n    \"spareDescription\": \"Description for spare part 23\",\n    \"spareType\": \"TIRE\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"34\",\n    \"quantity\": 7,\n    \"date\": \"2025-10-25T11:26:09.512153861\"\n  },\n  {\n    \"spareCode\": \"SPARE-24\",\n    \"spareName\": \"Spare Part 24\",\n    \"spareDescription\": \"Description for spare part 24\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"45\",\n    \"quantity\": 49,\n    \"date\": \"2025-10-25T11:26:09.512171869\"\n  },\n  {\n    \"spareCode\": \"SPARE-25\",\n    \"spareName\": \"Spare Part 25\",\n    \"spareDescription\": \"Description for spare part 25\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"0\",\n    \"quantity\": 45,\n    \"date\": \"2025-10-25T11:26:09.512189760\"\n  },\n  {\n    \"spareCode\": \"SPARE-26\",\n    \"spareName\": \"Spare Part 26\",\n    \"spareDescription\": \"Description for spare part 26\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"34\",\n    \"quantity\": 20,\n    \"date\": \"2025-10-25T11:26:09.512217272\"\n  },\n  {\n    \"spareCode\": \"SPARE-27\",\n    \"spareName\": \"Spare Part 27\",\n    \"spareDescription\": \"Description for spare part 27\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"33\",\n    \"quantity\": 25,\n    \"date\": \"2025-10-25T11:26:09.512235290\"\n  },\n  {\n    \"spareCode\": \"SPARE-28\",\n    \"spareName\": \"Spare Part 28\",\n    \"spareDescription\": \"Description for spare part 28\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"25\",\n    \"quantity\": 16,\n    \"date\": \"2025-10-25T11:26:09.512247143\"\n  },\n  {\n    \"spareCode\": \"SPARE-29\",\n    \"spareName\": \"Spare Part 29\",\n    \"spareDescription\": \"Description for spare part 29\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"35\",\n    \"quantity\": 18,\n    \"date\": \"2025-10-25T11:26:09.512278602\"\n  },\n  {\n    \"spareCode\": \"SPARE-30\",\n    \"spareName\": \"Spare Part 30\",\n    \"spareDescription\": \"Description for spare part 30\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"5\",\n    \"quantity\": 47,\n    \"date\": \"2025-10-25T11:26:09.512291946\"\n  },\n  {\n    \"spareCode\": \"SPARE-31\",\n    \"spareName\": \"Spare Part 31\",\n    \"spareDescription\": \"Description for spare part 31\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"33\",\n    \"quantity\": 48,\n    \"date\": \"2025-10-25T11:26:09.512309186\"\n  },\n  {\n    \"spareCode\": \"SPARE-32\",\n    \"spareName\": \"Spare Part 32\",\n    \"spareDescription\": \"Description for spare part 32\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"30\",\n    \"quantity\": 39,\n    \"date\": \"2025-10-25T11:26:09.512331250\"\n  },\n  {\n    \"spareCode\": \"SPARE-33\",\n    \"spareName\": \"Spare Part 33\",\n    \"spareDescription\": \"Description for spare part 33\",\n    \"spareType\": \"GEARBOX\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"22\",\n    \"quantity\": 22,\n    \"date\": \"2025-10-25T11:26:09.512376724\"\n  },\n  {\n    \"spareCode\": \"SPARE-34\",\n    \"spareName\": \"Spare Part 34\",\n    \"spareDescription\": \"Description for spare part 34\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"19\",\n    \"quantity\": 42,\n    \"date\": \"2025-10-25T11:26:09.512394405\"\n  },\n  {\n    \"spareCode\": \"SPARE-35\",\n    \"spareName\": \"Spare Part 35\",\n    \"spareDescription\": \"Description for spare part 35\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"41\",\n    \"quantity\": 16,\n    \"date\": \"2025-10-25T11:26:09.512433822\"\n  },\n  {\n    \"spareCode\": \"SPARE-36\",\n    \"spareName\": \"Spare Part 36\",\n    \"spareDescription\": \"Description for spare part 36\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"3\",\n    \"quantity\": 30,\n    \"date\": \"2025-10-25T11:26:09.512448441\"\n  },\n  {\n    \"spareCode\": \"SPARE-37\",\n    \"spareName\": \"Spare Part 37\",\n    \"spareDescription\": \"Description for spare part 37\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"11\",\n    \"quantity\": 22,\n    \"date\": \"2025-10-25T11:26:09.512465626\"\n  },\n  {\n    \"spareCode\": \"SPARE-38\",\n    \"spareName\": \"Spare Part 38\",\n    \"spareDescription\": \"Description for spare part 38\",\n    \"spareType\": \"TIRE\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"39\",\n    \"quantity\": 15,\n    \"date\": \"2025-10-25T11:26:09.512495784\"\n  },\n  {\n    \"spareCode\": \"SPARE-39\",\n    \"spareName\": \"Spare Part 39\",\n    \"spareDescription\": \"Description for spare part 39\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"3\",\n    \"quantity\": 4,\n    \"date\": \"2025-10-25T11:26:09.512513741\"\n  },\n  {\n    \"spareCode\": \"SPARE-40\",\n    \"spareName\": \"Spare Part 40\",\n    \"spareDescription\": \"Description for spare part 40\",\n    \"spareType\": \"GEARBOX\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"13\",\n    \"quantity\": 23,\n    \"date\": \"2025-10-25T11:26:09.512525146\"\n  },\n  {\n    \"spareCode\": \"SPARE-41\",\n    \"spareName\": \"Spare Part 41\",\n    \"spareDescription\": \"Description for spare part 41\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"1\",\n    \"quantity\": 3,\n    \"date\": \"2025-10-25T11:26:09.512551391\"\n  },\n  {\n    \"spareCode\": \"SPARE-42\",\n    \"spareName\": \"Spare Part 42\",\n    \"spareDescription\": \"Description for spare part 42\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"24\",\n    \"quantity\": 10,\n    \"date\": \"2025-10-25T11:26:09.512564823\"\n  },\n  {\n    \"spareCode\": \"SPARE-43\",\n    \"spareName\": \"Spare Part 43\",\n    \"spareDescription\": \"Description for spare part 43\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"34\",\n    \"quantity\": 34,\n    \"date\": \"2025-10-25T11:26:09.512578920\"\n  },\n  {\n    \"spareCode\": \"SPARE-44\",\n    \"spareName\": \"Spare Part 44\",\n    \"spareDescription\": \"Description for spare part 44\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"26\",\n    \"quantity\": 20,\n    \"date\": \"2025-10-25T11:26:09.512610928\"\n  },\n  {\n    \"spareCode\": \"SPARE-45\",\n    \"spareName\": \"Spare Part 45\",\n    \"spareDescription\": \"Description for spare part 45\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"42\",\n    \"quantity\": 47,\n    \"date\": \"2025-10-25T11:26:09.512623815\"\n  },\n  {\n    \"spareCode\": \"SPARE-46\",\n    \"spareName\": \"Spare Part 46\",\n    \"spareDescription\": \"Description for spare part 46\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"13\",\n    \"quantity\": 43,\n    \"date\": \"2025-10-25T11:26:09.512637603\"\n  },\n  {\n    \"spareCode\": \"SPARE-47\",\n    \"spareName\": \"Spare Part 47\",\n    \"spareDescription\": \"Description for spare part 47\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"36\",\n    \"quantity\": 39,\n    \"date\": \"2025-10-25T11:26:09.512663565\"\n  },\n  {\n    \"spareCode\": \"SPARE-48\",\n    \"spareName\": \"Spare Part 48\",\n    \"spareDescription\": \"Description for spare part 48\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"39\",\n    \"quantity\": 15,\n    \"date\": \"2025-10-25T11:26:09.512672942\"\n  },\n  {\n    \"spareCode\": \"SPARE-49\",\n    \"spareName\": \"Spare Part 49\",\n    \"spareDescription\": \"Description for spare part 49\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"5\",\n    \"quantity\": 18,\n    \"date\": \"2025-10-25T11:26:09.512683028\"\n  },\n  {\n    \"spareCode\": \"SPARE-50\",\n    \"spareName\": \"Spare Part 50\",\n    \"spareDescription\": \"Description for spare part 50\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"22\",\n    \"quantity\": 32,\n    \"date\": \"2025-10-25T11:26:09.512712617\"\n  }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a4639f6d-02b3-4d68-bfe6-c801af875433",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        384
+      ],
+      "id": "b3210109-8b1f-4217-b358-77a4dee14e4a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "spareCode",
+        "joinMode": "keepEverything",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        816,
+        192
+      ],
+      "id": "dc258aa8-fe22-4b9f-8138-785f20fb02c4",
+      "name": "Merge"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Upsert row(s)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert row(s)2": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "6e51eee9-e77d-4899-911d-089f9e00020b",
+  "meta": {
+    "instanceId": "0d82fa28b57436c128deced4a192d4a10961536f6717781bfa7e7d6ecb0db1c5"
+  },
+  "id": "qMPkf8wRZQM601HX",
+  "tags": []
+}
