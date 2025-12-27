@@ -1,0 +1,189 @@
+{
+  "name": "ExportDataGroup5",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        48
+      ],
+      "id": "95be0468-a380-4392-921a-e68d3c81a846",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "studentId",
+              "value": "5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "95d7d666-bbff-435c-824a-41ab292c3f35",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -1056,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- УБИРАЕМ ручной UPDATE имен и описаний. \n-- Данные в исторической БД должны в точности соответствовать тому, что пришло из CMS.\n\nSELECT DISTINCT ON (\"spareCode\") \n    \"spareCode\",\n    \"spareName\",\n    \"spareDescription\",\n    \"spareType\",\n    \"spareStatus\",\n    \"price\", \n    \"quantity\",\n    \"updatedAt\"\nFROM spares\n-- Мы берем только те, что НЕ были удалены логически, \n-- либо просто самые последние версии каждой детали.\nWHERE is_current = TRUE \nORDER BY \"spareCode\" ASC, id DESC;",
+        "options": {}
+      },
+      "id": "cef96496-0b67-4cdd-896e-b04177f70e51",
+      "name": "Get Active Spares",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        48
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "hAAiLtMQKs7nDdkt",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://212.237.219.35:8080/students/{{$node[\"Config\"].json[\"studentId\"]}}/report/csv",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "text/csv"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "8a387d19-4280-4be0-b422-7028354947aa",
+      "name": "Send Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        0,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "delimiter": ";",
+          "headerRow": false
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -576,
+        48
+      ],
+      "id": "5c38a278-3da8-424f-b05f-e4d5e26073fd",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Очистка входящих CSV-файлов от меток BOM (byte order mark)\n */\nconst rawItems = $input.all();\n\nreturn await Promise.all(rawItems.map(async (item, idx) => {\n  const fileData = item.binary?.data;\n  \n  if (!fileData) return item;\n\n  // Извлекаем содержимое во временный буфер\n  const content = await this.helpers.getBinaryDataBuffer(idx, 'data');\n\n  // Маркер UTF-8 BOM: [0xEF, 0xBB, 0xBF]\n  const hasBom = content[0] === 0xEF && content[1] === 0xBB && content[2] === 0xBF;\n\n  if (hasBom) {\n    // Создаем новый буфер без первых трех байтов\n    const sanitized = content.subarray(3);\n    \n    // Пересохраняем бинарку с сохранением исходного имени файла\n    item.binary.data = await this.helpers.prepareBinaryData(\n      sanitized,\n      fileData.fileName ?? 'upload.csv',\n      'text/csv'\n    );\n  }\n\n  return item;\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        48
+      ],
+      "id": "e4578231-1fa5-4d16-8618-fb3ddfed41d7",
+      "name": "StripBOM"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Get Active Spares",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Spares": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "StripBOM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "StripBOM": {
+      "main": [
+        [
+          {
+            "node": "Send Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Report": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "5d28bc6c-ed4f-441f-99c5-230c7255276c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0d82fa28b57436c128deced4a192d4a10961536f6717781bfa7e7d6ecb0db1c5"
+  },
+  "id": "tNDPBRbMhVJ4tlrC",
+  "tags": []
+}

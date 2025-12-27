@@ -1,0 +1,146 @@
+{
+  "name": "DownloadDataGroup5",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        192
+      ],
+      "id": "6d25db0c-345a-4015-8d25-263a65257926",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "studentId",
+              "value": "5"
+            },
+            {
+              "name": "baseUrl",
+              "value": "http://212.237.219.35:8080"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9584951a-3d31-4601-a7a8-66097e13bf62",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        96,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { baseUrl, studentId } = $input.item.json;\nlet allItems = [];\nlet page = 0;\n\nwhile (true) {\n    const response = await this.helpers.httpRequest({\n        method: 'GET',\n        url: `${baseUrl}/students/${studentId}/cms/spares`,\n        qs: { page: page, size: 20 }\n    });\n\n    if (Array.isArray(response) && response.length > 0) {\n        allItems.push(...response);\n        page++;\n    } else {\n        break;\n    }\n    if (page > 50) break;\n}\n\nreturn allItems.map(item => {\n    return {\n        json: {\n            spareCode: item.spareCode,\n            spareName: item.spareName,\n            spareDescription: item.spareDescription,\n            spareType: item.spareType,\n            spareStatus: item.spareStatus,\n            price: item.price,\n            quantity: item.quantity,\n            // Передаем дату КАК ЕСТЬ, со всеми наносекундами\n            updatedAt: item.updatedAt \n        }\n    };\n});"
+      },
+      "id": "9850963d-3027-4cc2-884f-d56689306e4c",
+      "name": "Download CMS Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 1. Сначала деактивируем ВСЕ старые записи для этого кода, \n-- если пришедшие данные отличаются хоть в одном поле.\nUPDATE spares\nSET is_current = FALSE, \n    valid_to = NOW()\nWHERE \"spareCode\" = '{{ $json.spareCode }}' \n  AND is_current = TRUE\n  AND (\n    \"spareName\" != '{{ $json.spareName }}' \n    OR \"spareDescription\" != '{{ $json.spareDescription }}'\n    OR \"spareType\" != '{{ $json.spareType }}'\n    OR \"spareStatus\" != '{{ $json.spareStatus }}'\n    OR \"price\" != '{{ $json.price }}'\n    OR \"quantity\" != {{ $json.quantity }}\n    OR \"updatedAt\" != '{{ $json.updatedAt }}'\n  );\n\n-- 2. Вставляем новую запись, если сейчас НЕТ активной записи с ТАКИМ ЖЕ набором данных.\nINSERT INTO spares (\n    \"spareCode\", \"spareName\", \"spareDescription\", \"spareType\", \n    \"spareStatus\", \"price\", \"quantity\", \"updatedAt\", \n    is_current, valid_from\n)\nSELECT \n    '{{ $json.spareCode }}', \n    '{{ $json.spareName }}', \n    '{{ $json.spareDescription }}', \n    '{{ $json.spareType }}', \n    '{{ $json.spareStatus }}', \n    '{{ $json.price }}', \n    {{ $json.quantity }}, \n    '{{ $json.updatedAt }}', \n    TRUE, \n    NOW()\nWHERE NOT EXISTS (\n    SELECT 1 FROM spares \n    WHERE \"spareCode\" = '{{ $json.spareCode }}' \n      AND \"updatedAt\" = '{{ $json.updatedAt }}'\n      AND \"price\" = '{{ $json.price }}'\n      AND \"quantity\" = {{ $json.quantity }}\n      AND is_current = TRUE\n);",
+        "options": {}
+      },
+      "id": "6f44f0cd-69f8-4199-aac3-a1d74bb9b9e5",
+      "name": "Update DB History",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        608,
+        192
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "hAAiLtMQKs7nDdkt",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    \"spareCode\": \"SPARE-1\",\n    \"spareName\": \"Spare Part 1\",\n    \"spareDescription\": \"Description for spare part 1\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"43\",\n    \"quantity\": 2,\n    \"updatedAt\": \"2025-10-25T11:26:09.510802372\"\n  },\n  {\n    \"spareCode\": \"SPARE-2\",\n    \"spareName\": \"Spare Part 2\",\n    \"spareDescription\": \"Description for spare part 2\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"28\",\n    \"quantity\": 3,\n    \"updatedAt\": \"2025-10-25T11:26:09.511635058\"\n  },\n  {\n    \"spareCode\": \"SPARE-3\",\n    \"spareName\": \"Spare Part 3\",\n    \"spareDescription\": \"Description for spare part 3\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"0\",\n    \"quantity\": 24,\n    \"updatedAt\": \"2025-10-25T11:26:09.511673246\"\n  },\n  {\n    \"spareCode\": \"SPARE-4\",\n    \"spareName\": \"Spare Part 4\",\n    \"spareDescription\": \"Description for spare part 4\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"20\",\n    \"quantity\": 41,\n    \"updatedAt\": \"2025-10-25T11:26:09.511690462\"\n  },\n  {\n    \"spareCode\": \"SPARE-5\",\n    \"spareName\": \"Spare Part 5\",\n    \"spareDescription\": \"Description for spare part 5\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"3\",\n    \"quantity\": 45,\n    \"updatedAt\": \"2025-10-25T11:26:09.511705592\"\n  },\n  {\n    \"spareCode\": \"SPARE-6\",\n    \"spareName\": \"Spare Part 6\",\n    \"spareDescription\": \"Description for spare part 6\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"31\",\n    \"quantity\": 28,\n    \"updatedAt\": \"2025-10-25T11:26:09.511738413\"\n  },\n  {\n    \"spareCode\": \"SPARE-7\",\n    \"spareName\": \"Spare Part 7\",\n    \"spareDescription\": \"Description for spare part 7\",\n    \"spareType\": \"GEARBOX\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"32\",\n    \"quantity\": 31,\n    \"updatedAt\": \"2025-10-25T11:26:09.511753247\"\n  },\n  {\n    \"spareCode\": \"SPARE-8\",\n    \"spareName\": \"Spare Part 8\",\n    \"spareDescription\": \"Description for spare part 8\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"20\",\n    \"quantity\": 29,\n    \"updatedAt\": \"2025-10-25T11:26:09.511766273\"\n  },\n  {\n    \"spareCode\": \"SPARE-9\",\n    \"spareName\": \"Spare Part 9\",\n    \"spareDescription\": \"Description for spare part 9\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"48\",\n    \"quantity\": 36,\n    \"updatedAt\": \"2025-10-25T11:26:09.511791327\"\n  },\n  {\n    \"spareCode\": \"SPARE-10\",\n    \"spareName\": \"Spare Part 10\",\n    \"spareDescription\": \"Description for spare part 10\",\n    \"spareType\": \"GEARBOX\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"25\",\n    \"quantity\": 30,\n    \"updatedAt\": \"2025-10-25T11:26:09.511824893\"\n  },\n  {\n    \"spareCode\": \"SPARE-11\",\n    \"spareName\": \"Spare Part 11\",\n    \"spareDescription\": \"Description for spare part 11\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"33\",\n    \"quantity\": 5,\n    \"updatedAt\": \"2025-10-25T11:26:09.511838730\"\n  },\n  {\n    \"spareCode\": \"SPARE-12\",\n    \"spareName\": \"Spare Part 12\",\n    \"spareDescription\": \"Description for spare part 12\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"0\",\n    \"quantity\": 2,\n    \"updatedAt\": \"2025-10-25T11:26:09.511890331\"\n  },\n  {\n    \"spareCode\": \"SPARE-13\",\n    \"spareName\": \"Spare Part 13\",\n    \"spareDescription\": \"Description for spare part 13\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"13\",\n    \"quantity\": 49,\n    \"updatedAt\": \"2025-10-25T11:26:09.511907368\"\n  },\n  {\n    \"spareCode\": \"SPARE-14\",\n    \"spareName\": \"Spare Part 14\",\n    \"spareDescription\": \"Description for spare part 14\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"49\",\n    \"quantity\": 7,\n    \"updatedAt\": \"2025-10-25T11:26:09.511926638\"\n  },\n  {\n    \"spareCode\": \"SPARE-15\",\n    \"spareName\": \"Spare Part 15\",\n    \"spareDescription\": \"Description for spare part 15\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"30\",\n    \"quantity\": 45,\n    \"updatedAt\": \"2025-10-25T11:26:09.511959222\"\n  },\n  {\n    \"spareCode\": \"SPARE-16\",\n    \"spareName\": \"Spare Part 16\",\n    \"spareDescription\": \"Description for spare part 16\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"28\",\n    \"quantity\": 7,\n    \"updatedAt\": \"2025-10-25T11:26:09.511979541\"\n  },\n  {\n    \"spareCode\": \"SPARE-17\",\n    \"spareName\": \"Spare Part 17\",\n    \"spareDescription\": \"Description for spare part 17\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"43\",\n    \"quantity\": 42,\n    \"updatedAt\": \"2025-10-25T11:26:09.511993793\"\n  },\n  {\n    \"spareCode\": \"SPARE-18\",\n    \"spareName\": \"Spare Part 18\",\n    \"spareDescription\": \"Description for spare part 18\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"45\",\n    \"quantity\": 5,\n    \"updatedAt\": \"2025-10-25T11:26:09.512026652\"\n  },\n  {\n    \"spareCode\": \"SPARE-19\",\n    \"spareName\": \"Spare Part 19\",\n    \"spareDescription\": \"Description for spare part 19\",\n    \"spareType\": \"GEARBOX\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"18\",\n    \"quantity\": 13,\n    \"updatedAt\": \"2025-10-25T11:26:09.512042471\"\n  },\n  {\n    \"spareCode\": \"SPARE-20\",\n    \"spareName\": \"Spare Part 20\",\n    \"spareDescription\": \"Description for spare part 20\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"15\",\n    \"quantity\": 26,\n    \"updatedAt\": \"2025-10-25T11:26:09.512082394\"\n  },\n  {\n    \"spareCode\": \"SPARE-21\",\n    \"spareName\": \"Spare Part 21\",\n    \"spareDescription\": \"Description for spare part 21\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"12\",\n    \"quantity\": 19,\n    \"updatedAt\": \"2025-10-25T11:26:09.512094896\"\n  },\n  {\n    \"spareCode\": \"SPARE-22\",\n    \"spareName\": \"Spare Part 22\",\n    \"spareDescription\": \"Description for spare part 22\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"2\",\n    \"quantity\": 43,\n    \"updatedAt\": \"2025-10-25T11:26:09.512129596\"\n  },\n  {\n    \"spareCode\": \"SPARE-23\",\n    \"spareName\": \"Spare Part 23\",\n    \"spareDescription\": \"Description for spare part 23\",\n    \"spareType\": \"TIRE\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"34\",\n    \"quantity\": 7,\n    \"updatedAt\": \"2025-10-25T11:26:09.512153861\"\n  },\n  {\n    \"spareCode\": \"SPARE-24\",\n    \"spareName\": \"Spare Part 24\",\n    \"spareDescription\": \"Description for spare part 24\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"45\",\n    \"quantity\": 49,\n    \"updatedAt\": \"2025-10-25T11:26:09.512171869\"\n  },\n  {\n    \"spareCode\": \"SPARE-25\",\n    \"spareName\": \"Spare Part 25\",\n    \"spareDescription\": \"Description for spare part 25\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"0\",\n    \"quantity\": 45,\n    \"updatedAt\": \"2025-10-25T11:26:09.512189760\"\n  },\n  {\n    \"spareCode\": \"SPARE-26\",\n    \"spareName\": \"Spare Part 26\",\n    \"spareDescription\": \"Description for spare part 26\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"34\",\n    \"quantity\": 20,\n    \"updatedAt\": \"2025-10-25T11:26:09.512217272\"\n  },\n  {\n    \"spareCode\": \"SPARE-27\",\n    \"spareName\": \"Spare Part 27\",\n    \"spareDescription\": \"Description for spare part 27\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"33\",\n    \"quantity\": 25,\n    \"updatedAt\": \"2025-10-25T11:26:09.512235290\"\n  },\n  {\n    \"spareCode\": \"SPARE-28\",\n    \"spareName\": \"Spare Part 28\",\n    \"spareDescription\": \"Description for spare part 28\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"25\",\n    \"quantity\": 16,\n    \"updatedAt\": \"2025-10-25T11:26:09.512247143\"\n  },\n  {\n    \"spareCode\": \"SPARE-29\",\n    \"spareName\": \"Spare Part 29\",\n    \"spareDescription\": \"Description for spare part 29\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"35\",\n    \"quantity\": 18,\n    \"updatedAt\": \"2025-10-25T11:26:09.512278602\"\n  },\n  {\n    \"spareCode\": \"SPARE-30\",\n    \"spareName\": \"Spare Part 30\",\n    \"spareDescription\": \"Description for spare part 30\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"5\",\n    \"quantity\": 47,\n    \"updatedAt\": \"2025-10-25T11:26:09.512291946\"\n  },\n  {\n    \"spareCode\": \"SPARE-31\",\n    \"spareName\": \"Spare Part 31\",\n    \"spareDescription\": \"Description for spare part 31\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"33\",\n    \"quantity\": 48,\n    \"updatedAt\": \"2025-10-25T11:26:09.512309186\"\n  },\n  {\n    \"spareCode\": \"SPARE-32\",\n    \"spareName\": \"Spare Part 32\",\n    \"spareDescription\": \"Description for spare part 32\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"30\",\n    \"quantity\": 39,\n    \"updatedAt\": \"2025-10-25T11:26:09.512331250\"\n  },\n  {\n    \"spareCode\": \"SPARE-33\",\n    \"spareName\": \"Spare Part 33\",\n    \"spareDescription\": \"Description for spare part 33\",\n    \"spareType\": \"GEARBOX\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"22\",\n    \"quantity\": 22,\n    \"updatedAt\": \"2025-10-25T11:26:09.512376724\"\n  },\n  {\n    \"spareCode\": \"SPARE-34\",\n    \"spareName\": \"Spare Part 34\",\n    \"spareDescription\": \"Description for spare part 34\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"19\",\n    \"quantity\": 42,\n    \"updatedAt\": \"2025-10-25T11:26:09.512394405\"\n  },\n  {\n    \"spareCode\": \"SPARE-35\",\n    \"spareName\": \"Spare Part 35\",\n    \"spareDescription\": \"Description for spare part 35\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"41\",\n    \"quantity\": 16,\n    \"updatedAt\": \"2025-10-25T11:26:09.512433822\"\n  },\n  {\n    \"spareCode\": \"SPARE-36\",\n    \"spareName\": \"Spare Part 36\",\n    \"spareDescription\": \"Description for spare part 36\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"RESERVED\",\n    \"price\": \"3\",\n    \"quantity\": 30,\n    \"updatedAt\": \"2025-10-25T11:26:09.512448441\"\n  },\n  {\n    \"spareCode\": \"SPARE-37\",\n    \"spareName\": \"Spare Part 37\",\n    \"spareDescription\": \"Description for spare part 37\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"11\",\n    \"quantity\": 22,\n    \"updatedAt\": \"2025-10-25T11:26:09.512465626\"\n  },\n  {\n    \"spareCode\": \"SPARE-38\",\n    \"spareName\": \"Spare Part 38\",\n    \"spareDescription\": \"Description for spare part 38\",\n    \"spareType\": \"TIRE\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"39\",\n    \"quantity\": 15,\n    \"updatedAt\": \"2025-10-25T11:26:09.512495784\"\n  },\n  {\n    \"spareCode\": \"SPARE-39\",\n    \"spareName\": \"Spare Part 39\",\n    \"spareDescription\": \"Description for spare part 39\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"3\",\n    \"quantity\": 4,\n    \"updatedAt\": \"2025-10-25T11:26:09.512513741\"\n  },\n  {\n    \"spareCode\": \"SPARE-40\",\n    \"spareName\": \"Spare Part 40\",\n    \"spareDescription\": \"Description for spare part 40\",\n    \"spareType\": \"GEARBOX\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"13\",\n    \"quantity\": 23,\n    \"updatedAt\": \"2025-10-25T11:26:09.512525146\"\n  },\n  {\n    \"spareCode\": \"SPARE-41\",\n    \"spareName\": \"Spare Part 41\",\n    \"spareDescription\": \"Description for spare part 41\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"1\",\n    \"quantity\": 3,\n    \"updatedAt\": \"2025-10-25T11:26:09.512551391\"\n  },\n  {\n    \"spareCode\": \"SPARE-42\",\n    \"spareName\": \"Spare Part 42\",\n    \"spareDescription\": \"Description for spare part 42\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"24\",\n    \"quantity\": 10,\n    \"updatedAt\": \"2025-10-25T11:26:09.512564823\"\n  },\n  {\n    \"spareCode\": \"SPARE-43\",\n    \"spareName\": \"Spare Part 43\",\n    \"spareDescription\": \"Description for spare part 43\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"AVAILABLE\",\n    \"price\": \"34\",\n    \"quantity\": 34,\n    \"updatedAt\": \"2025-10-25T11:26:09.512578920\"\n  },\n  {\n    \"spareCode\": \"SPARE-44\",\n    \"spareName\": \"Spare Part 44\",\n    \"spareDescription\": \"Description for spare part 44\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"26\",\n    \"quantity\": 20,\n    \"updatedAt\": \"2025-10-25T11:26:09.512610928\"\n  },\n  {\n    \"spareCode\": \"SPARE-45\",\n    \"spareName\": \"Spare Part 45\",\n    \"spareDescription\": \"Description for spare part 45\",\n    \"spareType\": \"BRAKE\",\n    \"spareStatus\": \"DAMAGED\",\n    \"price\": \"42\",\n    \"quantity\": 47,\n    \"updatedAt\": \"2025-10-25T11:26:09.512623815\"\n  },\n  {\n    \"spareCode\": \"SPARE-46\",\n    \"spareName\": \"Spare Part 46\",\n    \"spareDescription\": \"Description for spare part 46\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"13\",\n    \"quantity\": 43,\n    \"updatedAt\": \"2025-10-25T11:26:09.512637603\"\n  },\n  {\n    \"spareCode\": \"SPARE-47\",\n    \"spareName\": \"Spare Part 47\",\n    \"spareDescription\": \"Description for spare part 47\",\n    \"spareType\": \"BATTERY\",\n    \"spareStatus\": \"OUT_OF_STOCK\",\n    \"price\": \"36\",\n    \"quantity\": 39,\n    \"updatedAt\": \"2025-10-25T11:26:09.512663565\"\n  },\n  {\n    \"spareCode\": \"SPARE-48\",\n    \"spareName\": \"Spare Part 48\",\n    \"spareDescription\": \"Description for spare part 48\",\n    \"spareType\": \"ENGINE\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"39\",\n    \"quantity\": 15,\n    \"updatedAt\": \"2025-10-25T11:26:09.512672942\"\n  },\n  {\n    \"spareCode\": \"SPARE-49\",\n    \"spareName\": \"Spare Part 49\",\n    \"spareDescription\": \"Description for spare part 49\",\n    \"spareType\": \"CLUTCH\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"5\",\n    \"quantity\": 18,\n    \"updatedAt\": \"2025-10-25T11:26:09.512683028\"\n  },\n  {\n    \"spareCode\": \"SPARE-50\",\n    \"spareName\": \"Spare Part 50\",\n    \"spareDescription\": \"Description for spare part 50\",\n    \"spareType\": \"RADIATOR\",\n    \"spareStatus\": \"IN_TRANSIT\",\n    \"price\": \"22\",\n    \"quantity\": 32,\n    \"updatedAt\": \"2025-10-25T11:26:09.512712617\"\n  }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -32
+      ],
+      "id": "19e87861-320f-4c88-b249-50800719e68b",
+      "name": "AnotherDATA"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Download CMS Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download CMS Data": {
+      "main": [
+        [
+          {
+            "node": "Update DB History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update DB History": {
+      "main": [
+        []
+      ]
+    },
+    "AnotherDATA": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "c7bb232d-3e48-49f7-8088-f71b53bfd5ef",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0d82fa28b57436c128deced4a192d4a10961536f6717781bfa7e7d6ecb0db1c5"
+  },
+  "id": "iiBJYGT8z22sywIp",
+  "tags": []
+}
